@@ -1,7 +1,8 @@
-using System;
-using System.Collections.ObjectModel;
 using MobileMAUI_2.Model;
+using MobileMAUI_2.Services;
 using Microsoft.Maui.Controls;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace MobileMAUI_2.Pages
 {
@@ -9,12 +10,27 @@ namespace MobileMAUI_2.Pages
     {
         private ObservableCollection<Food> foods;
         private Food selectedFood;
+        private readonly DatabaseService _databaseService;  // Add this field
 
         public FoodPage()
         {
             InitializeComponent();
-            foods = new ObservableCollection<Food>();  // Initialize with data from your database
+            _databaseService = new DatabaseService();  // Initialize the DatabaseService
+            foods = new ObservableCollection<Food>();
             FoodCollectionView.ItemsSource = foods;
+
+            LoadFoods();  // Load foods from database on page load
+        }
+
+        // Load all foods from the database
+        private async Task LoadFoods()
+        {
+            var foodList = await _databaseService.GetAllFoodAsync();
+            foods.Clear();  // Clear any existing items
+            foreach (var food in foodList)
+            {
+                foods.Add(food);  // Add food items from database
+            }
         }
 
         // Add Food Button Clicked
@@ -34,18 +50,19 @@ namespace MobileMAUI_2.Pages
                     Description = FoodDescriptionEntry.Text,
                     Rating = int.Parse(RatingEntry.Text)
                 };
-                foods.Add(food); // Add to the ObservableCollection
-                // Save to the database
+                foods.Add(food);  // Add to the ObservableCollection
+                await _databaseService.AddFoodAsync(food);  // Save to the database
             }
             else  // Edit Existing Food
             {
                 selectedFood.Name = FoodNameEntry.Text;
                 selectedFood.Description = FoodDescriptionEntry.Text;
                 selectedFood.Rating = int.Parse(RatingEntry.Text);
-                // Update the food in the database
+                await _databaseService.UpdateFoodAsync(selectedFood);  // Update the database
             }
 
             ClearForm();
+            await LoadFoods();  // Refresh the food list after saving
         }
 
         // Cancel Button Clicked
@@ -70,7 +87,7 @@ namespace MobileMAUI_2.Pages
         }
 
         // Delete Button Clicked
-        private void OnDeleteFoodClicked(object sender, EventArgs e)
+        private async void OnDeleteFoodClicked(object sender, EventArgs e)
         {
             var button = sender as Button;
             var food = button?.BindingContext as Food;
@@ -78,7 +95,7 @@ namespace MobileMAUI_2.Pages
             if (food != null)
             {
                 foods.Remove(food);  // Remove from ObservableCollection
-                // Delete from the database
+                await _databaseService.DeleteFoodAsync(food);  // Delete from the database
             }
         }
 

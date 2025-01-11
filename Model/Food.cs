@@ -1,24 +1,76 @@
 ﻿using SQLite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 
 namespace MobileMAUI_2.Model
 {
     [Table("Food")]
-    public class Food
+    public class Food : INotifyPropertyChanged
     {
+        private int id;
+        private string name;
+        private string description;
+        private int rating;
+
         [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
+        public int Id
+        {
+            get => id;
+            set
+            {
+                if (id != value)
+                {
+                    id = value;
+                    OnPropertyChanged(nameof(Id));
+                }
+            }
+        }
 
-        [MaxLength(50), Unique]  // MaxLength and Unique constraint for Name field
-        public string Name { get; set; }
+        [MaxLength(50), Unique]
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name != value)
+                {
+                    name = value;
+                    OnPropertyChanged(nameof(Name));
+                }
+            }
+        }
 
-        [MaxLength(200)]  // MaxLength for Description field
-        public string Description { get; set; }
+        [MaxLength(200)]
+        public string Description
+        {
+            get => description;
+            set
+            {
+                if (description != value)
+                {
+                    description = value;
+                    OnPropertyChanged(nameof(Description));
+                }
+            }
+        }
 
-        public int Rating { get; set; }
+        public int Rating
+        {
+            get => rating;
+            set
+            {
+                if (rating != value)
+                {
+                    rating = value;
+                    OnPropertyChanged(nameof(Rating));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
