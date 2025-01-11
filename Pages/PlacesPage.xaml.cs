@@ -2,6 +2,8 @@ using System;
 using System.Collections.ObjectModel;
 using MobileMAUI_2.Model;
 using Microsoft.Maui.Controls;
+using MobileMAUI_2.Services;
+
 
 namespace MobileMAUI_2.Pages
 {
@@ -9,12 +11,25 @@ namespace MobileMAUI_2.Pages
     {
         private ObservableCollection<Places> places;
         private Places selectedPlace;
+        private DatabaseService _databaseService; // Declare DatabaseService
 
         public PlacesPage()
         {
             InitializeComponent();
+            _databaseService = new DatabaseService();
             places = new ObservableCollection<Places>();  // Initialize with data from your database
             PlacesCollectionView.ItemsSource = places;
+            LoadPlaces();
+        }
+
+        private async void LoadPlaces()
+        {
+            var allPlaces = await _databaseService.GetAllPlacesAsync();
+            places.Clear();
+            foreach (var place in allPlaces)
+            {
+                places.Add(place); // Add each place to the ObservableCollection
+            }
         }
 
         // Add Place Button Clicked
@@ -35,18 +50,29 @@ namespace MobileMAUI_2.Pages
                     Description = DescriptionEntry.Text
                 };
                 places.Add(place); // Add to the ObservableCollection
-                // Save to the database
+                await _databaseService.AddPlaceAsync(place);  // Save to the database
             }
             else  // Edit Existing Place
             {
                 selectedPlace.Name = PlaceNameEntry.Text;
                 selectedPlace.City = CityEntry.Text;
                 selectedPlace.Description = DescriptionEntry.Text;
-                // Update the place in the database
+
+                await _databaseService.UpdatePlaceAsync(selectedPlace);  // Update the place in the database
+
+                // Reload the places to reflect the updated data
+                var updatedPlaces = await _databaseService.GetAllPlacesAsync();
+                places.Clear();  // Clear the ObservableCollection
+                foreach (var place in updatedPlaces)
+                {
+                    places.Add(place);  // Add the updated places to the collection
+                }
             }
 
             ClearForm();
         }
+
+
 
         // Cancel Button Clicked
         private void OnCancelPlaceClicked(object sender, EventArgs e)
